@@ -22,7 +22,7 @@ namespace MyToDoProject.Controllers
         // GET: ToDoes
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Todos.Include(t => t.Category);
+            var applicationDbContext = _context.Todos.Include(t => t.Category).Where(w => !w.IsCompleted).OrderBy(w => w.DueDate);
             return View(await applicationDbContext.ToListAsync());
         }
 
@@ -48,7 +48,7 @@ namespace MyToDoProject.Controllers
         // GET: ToDoes/Create
         public IActionResult Create()
         {
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id");
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name");
             return View();
         }
 
@@ -65,7 +65,7 @@ namespace MyToDoProject.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id", toDo.CategoryId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", toDo.CategoryId);
             return View(toDo);
         }
 
@@ -82,7 +82,7 @@ namespace MyToDoProject.Controllers
             {
                 return NotFound();
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id", toDo.CategoryId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", toDo.CategoryId);
             return View(toDo);
         }
 
@@ -118,7 +118,7 @@ namespace MyToDoProject.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id", toDo.CategoryId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", toDo.CategoryId);
             return View(toDo);
         }
 
