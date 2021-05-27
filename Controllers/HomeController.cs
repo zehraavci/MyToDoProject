@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using MyToDoProject.Data;
 using MyToDoProject.Models;
 using System;
 using System.Collections.Generic;
@@ -12,15 +14,19 @@ namespace MyToDoProject.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext dbContext;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger,ApplicationDbContext dbContext)
         {
             _logger = logger;
+            this.dbContext = dbContext;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var queryDb = dbContext.Todos.Include(t => t.Category).Where(t => !t.IsCompleted).OrderBy(t => t.DueDate).Take(5);
+            List<ToDo> result = await queryDb.ToListAsync();
+            return View(result);
         }
 
         public IActionResult Privacy()

@@ -20,10 +20,20 @@ namespace MyToDoProject.Controllers
         }
 
         // GET: ToDoes
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(SearchViewModel searchModel)
         {
-            var applicationDbContext = _context.Todos.Include(t => t.Category).Where(w => !w.IsCompleted).OrderBy(w => w.DueDate);
-            return View(await applicationDbContext.ToListAsync());
+            var query = _context.Todos.Include(t => t.Category).AsQueryable();
+            if (searchModel.InDescription)
+            {
+                query = query.Where(t => t.Description.Contains(searchModel.SearchTitle));
+            
+            }else if (!String.IsNullOrWhiteSpace(searchModel.SearchTitle))
+            {
+                query = query.Where(t => t.Title.Contains(searchModel.SearchTitle));
+            }
+            query = query.OrderBy(w => w.DueDate);
+            searchModel.Result = await query.ToListAsync();
+            return View(searchModel);
         }
 
         // GET: ToDoes/Details/5

@@ -20,13 +20,16 @@ namespace MyToDoProject.Models
         [MaxLength(1750)]
         [DataType(DataType.MultilineText)]
         public string Description { get; set; }
+        [Display(Name ="Is Completed")]
         public bool IsCompleted { get; set; }
+        [Display(Name = "Due Date")]
         public DateTime DueDate { get; set; }
         [ScaffoldColumn(false)]
         public DateTime CreatedDate { get; set; }
 
         [ScaffoldColumn(false)]
         public DateTime CompletedDate { get; set; }
+        [Display(Name = "Remaining Hour")]
         public int RemainingHour
         {
             get
