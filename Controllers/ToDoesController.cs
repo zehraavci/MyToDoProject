@@ -23,6 +23,11 @@ namespace MyToDoProject.Controllers
         public async Task<IActionResult> Index(SearchViewModel searchModel)
         {
             var query = _context.Todos.Include(t => t.Category).AsQueryable();
+
+            if (searchModel.CategoryId != 0)
+            {
+                query = query.Where(t => t.CategoryId == searchModel.CategoryId);
+            }
             if (searchModel.InDescription)
             {
                 query = query.Where(t => t.Description.Contains(searchModel.SearchTitle));

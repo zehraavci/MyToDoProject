@@ -167,3 +167,4 @@ C:\Users\glryz\source\repos\MyToDoProject\MyToDoProject\obj\Debug\net5.0\Razor\V
 C:\Users\glryz\source\repos\MyToDoProject\MyToDoProject\obj\Debug\net5.0\Razor\Views\ToDoes\Details.cshtml.g.cs
 C:\Users\glryz\source\repos\MyToDoProject\MyToDoProject\obj\Debug\net5.0\Razor\Views\ToDoes\Edit.cshtml.g.cs
 C:\Users\glryz\source\repos\MyToDoProject\MyToDoProject\obj\Debug\net5.0\Razor\Views\ToDoes\Index.cshtml.g.cs
+C:\Users\glryz\source\repos\MyToDoProject\MyToDoProject\obj\Debug\net5.0\Razor\Views\Shared\Components\CategoryMenu\default.cshtml.g.cs

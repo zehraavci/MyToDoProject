@@ -9,6 +9,7 @@ namespace MyToDoProject.Models
     {
         public string SearchTitle { get; set; }
         public bool InDescription { get; set; }
+        public int CategoryId { get; set; }
 
         public List<ToDo> Result { get; set; }
     }
