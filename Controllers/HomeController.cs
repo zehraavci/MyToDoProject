@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MyToDoProject.Data;
@@ -15,18 +16,30 @@ namespace MyToDoProject.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext dbContext;
+        private readonly UserManager<CetUser> _userManager;
 
-        public HomeController(ILogger<HomeController> logger,ApplicationDbContext dbContext)
+        public HomeController(ILogger<HomeController> logger,ApplicationDbContext dbContext, UserManager<CetUser> userManager)
         {
             _logger = logger;
             this.dbContext = dbContext;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()
         {
-            var queryDb = dbContext.Todos.Include(t => t.Category).Where(t => !t.IsCompleted).OrderBy(t => t.DueDate).Take(5);
-            List<ToDo> result = await queryDb.ToListAsync();
+            List<ToDo> result;
+            if (User.Identity.IsAuthenticated)
+            {
+                var cetUser = await _userManager.GetUserAsync(HttpContext.User);
+                var queryDb = dbContext.Todos.Include(t => t.Category).Where(t =>t.CetUserId == cetUser.Id && !t.IsCompleted).OrderBy(t => t.DueDate).Take(5);
+                result = await queryDb.ToListAsync();
+            }
+            else
+            {
+                result = new List<ToDo>();
+            }
             return View(result);
+
         }
 
         public IActionResult Privacy()

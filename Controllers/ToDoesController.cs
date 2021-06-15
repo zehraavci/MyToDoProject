@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,19 +12,22 @@ using MyToDoProject.Models;
 
 namespace MyToDoProject.Controllers
 {
+    [Authorize]
     public class ToDoesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<CetUser> _userManager;
 
-        public ToDoesController(ApplicationDbContext context)
+        public ToDoesController(ApplicationDbContext context, UserManager<CetUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
-
         // GET: ToDoes
         public async Task<IActionResult> Index(SearchViewModel searchModel)
         {
-            var query = _context.Todos.Include(t => t.Category).AsQueryable();
+            var cetUser = await _userManager.GetUserAsync(HttpContext.User);
+            var query = _context.Todos.Include(t => t.Category).Where(t => t.CetUserId == cetUser.Id);
 
             if (searchModel.CategoryId != 0)
             {
@@ -52,6 +57,12 @@ namespace MyToDoProject.Controllers
             var toDo = await _context.Todos
                 .Include(t => t.Category)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
+            var cetUser = await _userManager.GetUserAsync(HttpContext.User);
+            if (toDo.CetUserId != cetUser.Id)
+            {
+                return Unauthorized();
+            }
             if (toDo == null)
             {
                 return NotFound();
@@ -74,6 +85,8 @@ namespace MyToDoProject.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Title,Description,IsCompleted,DueDate,CategoryId")] ToDo toDo)
         {
+            var cetUser =await _userManager.GetUserAsync(HttpContext.User);
+            toDo.CetUserId = cetUser.Id;
             if (ModelState.IsValid)
             {
                 _context.Add(toDo);
@@ -93,6 +106,11 @@ namespace MyToDoProject.Controllers
             }
 
             var toDo = await _context.Todos.FindAsync(id);
+            var cetUser = await _userManager.GetUserAsync(HttpContext.User);
+            if (toDo.CetUserId != cetUser.Id)
+            {
+                return Unauthorized();
+            }
             if (toDo == null)
             {
                 return NotFound();
@@ -106,7 +124,7 @@ namespace MyToDoProject.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,IsCompleted,DueDate,CategoryId")] ToDo toDo)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,IsCompleted,DueDate,CategoryId,CreatedDate,CetUserId")] ToDo toDo)
         {
             if (id != toDo.Id)
             {
@@ -117,7 +135,19 @@ namespace MyToDoProject.Controllers
             {
                 try
                 {
-                    _context.Update(toDo);
+                    var oldTodo = await _context.Todos.FindAsync(id);
+                    var cetUser = await _userManager.GetUserAsync(HttpContext.User);
+                    if(oldTodo.CetUserId != cetUser.Id)
+                    {
+                        return Unauthorized();
+                    }
+                    oldTodo.Title = toDo.Title;
+                    oldTodo.CompletedDate = toDo.CompletedDate;
+                    oldTodo.CategoryId = toDo.CategoryId;
+                    oldTodo.IsCompleted = toDo.IsCompleted;
+                    oldTodo.Description = toDo.Description;
+                    oldTodo.DueDate = toDo.DueDate;
+                    _context.Update(oldTodo);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)

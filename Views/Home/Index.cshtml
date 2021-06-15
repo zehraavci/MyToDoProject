@@ -7,54 +7,58 @@
     <h1 class="display-4">Welcome MyToDoProject</h1>
 </div>
 
-@if (Model.Any())
+@if (User.Identity.IsAuthenticated)
 {
-    <table class="table table-striped table-hover mt-5">
-        <thead>
-            <tr>
-                <th>
-                    @Html.DisplayNameFor(model => model.Title)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Category)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.RemainingHour)
-                </th>
-
-                <th>Transactions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
+    @if (Model.Any())
+    {
+        <table class="table table-striped table-hover mt-5">
+            <thead>
                 <tr>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Title)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Category.Name)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.RemainingHour) Hour
-                    </td>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Title)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Category)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.RemainingHour)
+                    </th>
 
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                        <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-                    </td>
+                    <th>Transactions</th>
                 </tr>
-            }
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Title)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Category.Name)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.RemainingHour) Hour
+                        </td>
+
+                        <td>
+                            <a asp-controller="ToDoes" asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                            <a asp-controller="ToDoes" asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                            <a asp-controller="ToDoes" asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                        </td>
+                    </tr>
+                }
 
 
 
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-success text-center" role="alert">
+            You finished all your work!
+        </div>
+    }
 }
-else
-{
-<div class="alert alert-success text-center" role="alert">
-    You finished all your work!
-</div>
-}
+
