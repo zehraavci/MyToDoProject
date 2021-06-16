@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,19 +12,24 @@ using MyToDoProject.Models;
 
 namespace MyToDoProject.Controllers
 {
+    [Authorize]
     public class CategoriesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<CetUser> _userManager;
 
-        public CategoriesController(ApplicationDbContext context)
+        public CategoriesController(ApplicationDbContext context, UserManager<CetUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Categories
         public async Task<IActionResult> Index(SearchCategoryViewModel searchModel)
         {
-            var query = _context.Categories.AsQueryable();
+            var cetUser = await _userManager.GetUserAsync(HttpContext.User);
+            var query = _context.Categories.Where(t => t.CetUserId == cetUser.Id || t.CetUserId == null);
+
             if (searchModel.InDescription)
             {
                 query = query.Where(t => t.Description.Contains(searchModel.SearchTitle));
@@ -45,9 +52,16 @@ namespace MyToDoProject.Controllers
             {
                 return NotFound();
             }
-
+        
             var category = await _context.Categories
                 .FirstOrDefaultAsync(m => m.Id == id);
+
+            var cetUser = await _userManager.GetUserAsync(HttpContext.User);
+            if (category.CetUserId != cetUser.Id)
+            {
+                return Forbid();
+            }
+
             if (category == null)
             {
                 return NotFound();
@@ -71,6 +85,8 @@ namespace MyToDoProject.Controllers
         {
             if (ModelState.IsValid)
             {
+                var cetUser = await _userManager.GetUserAsync(HttpContext.User);
+                category.CetUserId = cetUser.Id;
                 _context.Add(category);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -87,6 +103,11 @@ namespace MyToDoProject.Controllers
             }
 
             var category = await _context.Categories.FindAsync(id);
+            var cetUser = await _userManager.GetUserAsync(HttpContext.User);
+            if (category.CetUserId != cetUser.Id)
+            {
+                return Forbid();
+            }
             if (category == null)
             {
                 return NotFound();
@@ -99,7 +120,7 @@ namespace MyToDoProject.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description")] Category category)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,CetUserId")] Category category)
         {
             if (id != category.Id)
             {
@@ -110,7 +131,15 @@ namespace MyToDoProject.Controllers
             {
                 try
                 {
-                    _context.Update(category);
+                    var oldCategory = await _context.Categories.FindAsync(id);
+                    var cetUser = await _userManager.GetUserAsync(HttpContext.User);
+                    if (oldCategory.CetUserId != cetUser.Id)
+                    {
+                        return Forbid();
+                    }
+                    oldCategory.Name = category.Name;
+                    oldCategory.Description= category.Description;
+                    _context.Update(oldCategory);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -139,6 +168,12 @@ namespace MyToDoProject.Controllers
 
             var category = await _context.Categories
                 .FirstOrDefaultAsync(m => m.Id == id);
+            var cetUser = await _userManager.GetUserAsync(HttpContext.User);
+            if (category.CetUserId != cetUser.Id)
+            {
+                return Forbid();
+            }
+
             if (category == null)
             {
                 return NotFound();

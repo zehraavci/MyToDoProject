@@ -16,7 +16,8 @@ namespace MyToDoProject.Models
         [MaxLength(1000)]
         [DataType(DataType.MultilineText)]
         public string Description { get; set; }
-
+        public string CetUserId { get; set; }
+        public virtual CetUser CetUser { get; set; }
         public virtual List<ToDo> Todos { get; set; }
     }
 }

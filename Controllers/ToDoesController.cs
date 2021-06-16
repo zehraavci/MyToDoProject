@@ -61,7 +61,7 @@ namespace MyToDoProject.Controllers
             var cetUser = await _userManager.GetUserAsync(HttpContext.User);
             if (toDo.CetUserId != cetUser.Id)
             {
-                return Unauthorized();
+                return Forbid();
             }
             if (toDo == null)
             {
@@ -72,9 +72,10 @@ namespace MyToDoProject.Controllers
         }
 
         // GET: ToDoes/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name");
+            var cetUser = await _userManager.GetUserAsync(HttpContext.User);
+            ViewData["CategoryId"] = new SelectList(_context.Categories.Where(t => t.CetUserId == cetUser.Id || t.CetUserId == null), "Id", "Name");
             return View();
         }
 
@@ -83,7 +84,7 @@ namespace MyToDoProject.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Description,IsCompleted,DueDate,CategoryId")] ToDo toDo)
+        public async Task<IActionResult> Create([Bind("Id,Title,Description,IsCompleted,DueDate,CategoryId,CetUserId")] ToDo toDo)
         {
             var cetUser =await _userManager.GetUserAsync(HttpContext.User);
             toDo.CetUserId = cetUser.Id;
@@ -93,7 +94,7 @@ namespace MyToDoProject.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", toDo.CategoryId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories.Where(t => t.CetUserId == cetUser.Id || t.CetUserId == null), "Id", "Name", toDo.CategoryId);
             return View(toDo);
         }
 
@@ -109,13 +110,13 @@ namespace MyToDoProject.Controllers
             var cetUser = await _userManager.GetUserAsync(HttpContext.User);
             if (toDo.CetUserId != cetUser.Id)
             {
-                return Unauthorized();
+                return Forbid();
             }
             if (toDo == null)
             {
                 return NotFound();
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", toDo.CategoryId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories.Where(t => t.CetUserId == cetUser.Id || t.CetUserId == null), "Id", "Name", toDo.CategoryId);
             return View(toDo);
         }
 
@@ -126,6 +127,7 @@ namespace MyToDoProject.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,IsCompleted,DueDate,CategoryId,CreatedDate,CetUserId")] ToDo toDo)
         {
+            var cetUser = await _userManager.GetUserAsync(HttpContext.User);
             if (id != toDo.Id)
             {
                 return NotFound();
@@ -136,10 +138,10 @@ namespace MyToDoProject.Controllers
                 try
                 {
                     var oldTodo = await _context.Todos.FindAsync(id);
-                    var cetUser = await _userManager.GetUserAsync(HttpContext.User);
+                    
                     if(oldTodo.CetUserId != cetUser.Id)
                     {
-                        return Unauthorized();
+                        return Forbid();
                     }
                     oldTodo.Title = toDo.Title;
                     oldTodo.CompletedDate = toDo.CompletedDate;
@@ -163,7 +165,7 @@ namespace MyToDoProject.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", toDo.CategoryId);
+            ViewData["CategoryId"] = new SelectList(_context.Categories.Where(t => t.CetUserId == cetUser.Id || t.CetUserId == null), "Id", "Name", toDo.CategoryId);
             return View(toDo);
         }
 
@@ -178,6 +180,12 @@ namespace MyToDoProject.Controllers
             var toDo = await _context.Todos
                 .Include(t => t.Category)
                 .FirstOrDefaultAsync(m => m.Id == id);
+            var cetUser = await _userManager.GetUserAsync(HttpContext.User);
+            if (toDo.CetUserId != cetUser.Id)
+            {
+                return Forbid();
+            }
+
             if (toDo == null)
             {
                 return NotFound();
